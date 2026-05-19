@@ -3,7 +3,9 @@ package com.Light06.Components;
 import com.hypixel.hytale.component.Component;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import org.jspecify.annotations.Nullable;
+
+import javax.annotation.Nullable;
+
 
 public class TalonDaggerComponent implements Component<EntityStore> {
     public enum DaggerState {

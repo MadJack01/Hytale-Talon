@@ -45,7 +45,7 @@ public class TalonUltimateInteraction extends SimpleInstantInteraction {
     protected Integer daggerCount = 12;
     protected float hoverDuration = 10.0f;
     protected float damage = 15.0f;
-    protected String projectileAsset = "";
+    protected String projectileAsset = "Projectile_Config_Dagger";
 
     @Override
     protected void firstRun(@Nonnull InteractionType interactionType, @Nonnull InteractionContext interactionContext, @Nonnull CooldownHandler cooldownHandler) {
@@ -55,15 +55,18 @@ public class TalonUltimateInteraction extends SimpleInstantInteraction {
 
         TransformComponent trans = store.getComponent(playerRef, TransformComponent.getComponentType());
         if (trans == null) return;
+
         TalonPlayerComponent talonPlayerComponent = store.getComponent(playerRef, TalonPlugin.getTalonPlayerComponentType());
         if (talonPlayerComponent != null) {
-            cb.removeComponent(playerRef, TalonPlugin.getTalonPlayerComponentType());
+            talonPlayerComponent.remainingHoverTime = this.hoverDuration;
+            talonPlayerComponent.lockedTarget = null;
+            talonPlayerComponent.IsActive = true;
+        } else {
+            TalonPlayerComponent newPlayerTrack = new TalonPlayerComponent();
+            newPlayerTrack.remainingHoverTime = this.hoverDuration;
+            newPlayerTrack.IsActive = true;
+            cb.addComponent(playerRef, TalonPlugin.getTalonPlayerComponentType(), newPlayerTrack);
         }
-
-        TalonPlayerComponent newPlayerTrack = new TalonPlayerComponent();
-        newPlayerTrack.remainingHoverTime = this.hoverDuration;
-        newPlayerTrack.IsActive = true;
-        cb.addComponent(playerRef, TalonPlugin.getTalonPlayerComponentType(), newPlayerTrack);
 
         ProjectileConfig config = (ProjectileConfig) ProjectileConfig.getAssetMap().getAsset(this.projectileAsset);
         if (config == null) return;
@@ -78,12 +81,17 @@ public class TalonUltimateInteraction extends SimpleInstantInteraction {
 
         for (int i = 0; i < this.daggerCount; i++) {
             double angle = i * (2.0 * Math.PI / this.daggerCount);
-            double vx = Math.cos(angle) * outwardSpeed;
-            double vz = Math.sin(angle) * outwardSpeed;
-            double vy = 0.0;
 
-            Vector3d velocityDirection = new Vector3d(vx, vy, vz);
-            Ref<EntityStore> daggerRef = ProjectileModule.get().spawnProjectile(playerRef, cb, config, spawnPos, velocityDirection);
+            double dirX = Math.cos(angle);
+            double dirY = 0.0;
+            double dirZ = Math.sin(angle);
+            Vector3d normalizedDir = new Vector3d(dirX, dirY, dirZ);
+
+            Ref<EntityStore> daggerRef = ProjectileModule.get().spawnProjectile(playerRef, cb, config, spawnPos, normalizedDir);
+
+            double vx = dirX * outwardSpeed;
+            double vy = dirY * outwardSpeed;
+            double vz = dirZ * outwardSpeed;
 
             TalonDaggerComponent daggerComp = new TalonDaggerComponent(
                     spawnPos.x, spawnPos.y, spawnPos.z,

@@ -3,7 +3,7 @@ package com.Light06.Components;
 import com.hypixel.hytale.component.Component;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public class TalonPlayerComponent implements Component<EntityStore> {
     public Ref<EntityStore> lockedTarget = null;

@@ -23,8 +23,14 @@ public class TalonTimerSystem extends EntityTickingSystem<EntityStore> {
     @Override
     public void tick(float dt, int index, @Nonnull ArchetypeChunk<EntityStore> chunk, @Nonnull Store<EntityStore> store, @Nonnull CommandBuffer<EntityStore> cb) {
         TalonPlayerComponent playerTrack = (TalonPlayerComponent) chunk.getComponent(index, TalonPlugin.getTalonPlayerComponentType());
+        Ref<EntityStore> playerRef = chunk.getReferenceTo(index);
 
-        if (playerTrack == null || !playerTrack.IsActive) return;
+        if (playerTrack == null) return;
+
+        if (!playerTrack.IsActive) {
+            cb.removeComponent(playerRef, TalonPlugin.getTalonPlayerComponentType());
+            return;
+        }
 
         playerTrack.remainingHoverTime -= dt;
         if (playerTrack.remainingHoverTime <= 0.0f) {

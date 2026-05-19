@@ -1,0 +1,25 @@
+{
+    "Group": "com.Light06",
+    "Name": "talon",
+    "Version": "1.0.0",
+    "Description": "Talon from league of legends!",
+    "Authors": [
+        {
+            "Name": "Light06"
+        }
+    ],
+    "Website": "",
+    "ServerVersion": "2026.03.26-89796e57b",
+    "Dependencies": {
+        "Hytale:AssetModule": "*"
+    },
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "Main": "com.Light06.TalonPlugin",
+    "IncludesAssetPack": true,
+    "UpdateChecker": {
+        "CurseForge": ""
+    }
+}

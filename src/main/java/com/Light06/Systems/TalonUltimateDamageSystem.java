@@ -7,8 +7,9 @@ import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
+
 
 public class TalonUltimateDamageSystem extends DamageEventSystem {
 
@@ -18,7 +19,7 @@ public class TalonUltimateDamageSystem extends DamageEventSystem {
     }
 
     @Override
-    public void handle(int i, @NotNull ArchetypeChunk<EntityStore> archetypeChunk, @NotNull Store<EntityStore> store, @NotNull CommandBuffer<EntityStore> commandBuffer, @NotNull Damage damage) {
+    public void handle(int i, @Nonnull ArchetypeChunk<EntityStore> archetypeChunk, @Nonnull Store<EntityStore> store, @Nonnull CommandBuffer<EntityStore> commandBuffer, @Nonnull Damage damage) {
         Ref<EntityStore> targetRef = archetypeChunk.getReferenceTo(i);
         Damage.Source source = damage.getSource();
 

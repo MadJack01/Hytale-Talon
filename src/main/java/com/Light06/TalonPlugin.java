@@ -5,7 +5,6 @@ import com.Light06.Components.TalonDaggerComponent;
 import com.Light06.Components.TalonPlayerComponent;
 import com.Light06.Interactions.TalonUltimateInteraction;
 import com.Light06.Systems.TalonDaggerTickingSystem;
-import com.Light06.Systems.TalonDamageListenerSystem;
 import com.Light06.Systems.TalonTimerSystem;
 import com.Light06.Systems.TalonUltimateDamageSystem;
 import com.hypixel.hytale.component.ComponentType;

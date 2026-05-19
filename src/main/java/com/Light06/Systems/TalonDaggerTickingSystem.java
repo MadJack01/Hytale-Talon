@@ -61,22 +61,24 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                 break;
 
             case HOVERING:
+                float currentYaw = tc.getRotation().getYaw();
+                float spinSpeed = 12.0f;
+                tc.getRotation().setYaw(currentYaw + (spinSpeed * dt));
+
                 if (playerTrack != null && playerTrack.lockedTarget != null && playerTrack.lockedTarget.isValid()) {
                     dagger.state = DaggerState.HOMING;
                     dagger.targetRef = playerTrack.lockedTarget;
                     dagger.isReturningToOwner = false;
-                    TalonPlayerComponent talonPlayerComponent = store.getComponent(dagger.ownerRef, TalonPlugin.getTalonPlayerComponentType());
-                    if (talonPlayerComponent != null) {
-                        cb.removeComponent(dagger.ownerRef, TalonPlugin.getTalonPlayerComponentType());
-                    }
+
+                    playerTrack.IsActive = false;
                 }
                 else if (dagger.stateTimer >= 10.0f || (playerTrack != null && !playerTrack.IsActive)) {
                     dagger.state = DaggerState.HOMING;
                     dagger.targetRef = dagger.ownerRef;
                     dagger.isReturningToOwner = true;
-                    TalonPlayerComponent talonPlayerComponent = store.getComponent(dagger.ownerRef, TalonPlugin.getTalonPlayerComponentType());
-                    if (talonPlayerComponent != null) {
-                        cb.removeComponent(dagger.ownerRef, TalonPlugin.getTalonPlayerComponentType());
+
+                    if (playerTrack != null) {
+                        playerTrack.IsActive = false;
                     }
                 }
                 break;
