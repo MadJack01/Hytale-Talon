@@ -69,10 +69,9 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                     dagger.state = DaggerState.HOMING;
                     dagger.targetRef = playerTrack.lockedTarget;
                     dagger.isReturningToOwner = false;
-
                     playerTrack.IsActive = false;
                 }
-                else if (dagger.stateTimer >= 10.0f || (playerTrack != null && !playerTrack.IsActive)) {
+                else if (dagger.stateTimer >= 10.0f || playerTrack == null || !playerTrack.IsActive) {
                     dagger.state = DaggerState.HOMING;
                     dagger.targetRef = dagger.ownerRef;
                     dagger.isReturningToOwner = true;
@@ -117,6 +116,35 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                         }
                         cb.removeEntity(daggerRef, RemoveReason.REMOVE);
                         return;
+                    }
+
+                    if (dagger.isReturningToOwner) {
+                        store.forEachChunk(Query.and(TransformComponent.getComponentType(), BoundingBox.getComponentType()), (c, unused) -> {
+                            int size = c.size();
+                            for (int i = 0; i < size; ++i) {
+                                Ref<EntityStore> hitRef = c.getReferenceTo(i);
+
+                                if (hitRef.equals(dagger.ownerRef) || dagger.hitEntities.contains(hitRef)) continue;
+                                if (c.getComponent(i, DeathComponent.getComponentType()) != null) continue;
+
+                                TransformComponent hitTc = (TransformComponent) c.getComponent(i, TransformComponent.getComponentType());
+                                BoundingBox hitBb = (BoundingBox) c.getComponent(i, BoundingBox.getComponentType());
+
+                                double hx = hitTc.getPosition().x;
+                                double hz = hitTc.getPosition().z;
+                                double hy = hitTc.getPosition().y + (hitBb.getBoundingBox().getMin().y + hitBb.getBoundingBox().getMax().y) * 0.5;
+
+                                double hdx = hx - dagger.px;
+                                double hdy = hy - dagger.py;
+                                double hdz = hz - dagger.pz;
+                                double hDistSq = hdx * hdx + hdy * hdy + hdz * hdz;
+
+                                if (hDistSq < 2.25) {
+                                    dagger.hitEntities.add(hitRef);
+                                    DamageSystems.executeDamage(hitRef, cb, new Damage(new Damage.EntitySource(dagger.ownerRef), DamageCause.PHYSICAL, dagger.damage));
+                                }
+                            }
+                        });
                     }
 
                     if (dist > 0.1) {

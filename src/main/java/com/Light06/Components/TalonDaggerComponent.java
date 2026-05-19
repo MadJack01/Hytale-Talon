@@ -5,7 +5,8 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nullable;
-
+import java.util.HashSet;
+import java.util.Set;
 
 public class TalonDaggerComponent implements Component<EntityStore> {
     public enum DaggerState {
@@ -18,6 +19,9 @@ public class TalonDaggerComponent implements Component<EntityStore> {
     public Ref<EntityStore> ownerRef = null;
     public Ref<EntityStore> targetRef = null;
 
+    // Tracks who this specific dagger has already damaged while returning
+    public Set<Ref<EntityStore>> hitEntities = new HashSet<>();
+
     public double px, py, pz;
     public double vx, vy, vz;
 
@@ -25,7 +29,7 @@ public class TalonDaggerComponent implements Component<EntityStore> {
     public float stateTimer = 0.0f;
     public boolean isReturningToOwner = false;
 
-    public double speed = 40.0;
+    public double speed = 25.0;
     public double turnRate = 12.0;
 
     public TalonDaggerComponent() {}
@@ -50,6 +54,7 @@ public class TalonDaggerComponent implements Component<EntityStore> {
         copy.isReturningToOwner = this.isReturningToOwner;
         copy.speed = this.speed;
         copy.turnRate = this.turnRate;
+        copy.hitEntities = new HashSet<>(this.hitEntities);
         return copy;
     }
 }

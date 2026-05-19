@@ -58,28 +58,28 @@ public class TalonUltimateInteraction extends SimpleInstantInteraction {
 
         TalonPlayerComponent talonPlayerComponent = store.getComponent(playerRef, TalonPlugin.getTalonPlayerComponentType());
         if (talonPlayerComponent != null) {
-            talonPlayerComponent.remainingHoverTime = this.hoverDuration;
-            talonPlayerComponent.lockedTarget = null;
-            talonPlayerComponent.IsActive = true;
-        } else {
-            TalonPlayerComponent newPlayerTrack = new TalonPlayerComponent();
-            newPlayerTrack.remainingHoverTime = this.hoverDuration;
-            newPlayerTrack.IsActive = true;
-            cb.addComponent(playerRef, TalonPlugin.getTalonPlayerComponentType(), newPlayerTrack);
+            talonPlayerComponent.IsActive = false;
+            return;
         }
+
+        TalonPlayerComponent newPlayerTrack = new TalonPlayerComponent();
+        newPlayerTrack.remainingHoverTime = this.hoverDuration;
+        newPlayerTrack.IsActive = true;
+        cb.addComponent(playerRef, TalonPlugin.getTalonPlayerComponentType(), newPlayerTrack);
 
         ProjectileConfig config = (ProjectileConfig) ProjectileConfig.getAssetMap().getAsset(this.projectileAsset);
         if (config == null) return;
 
-        Vector3d spawnPos = new Vector3d(
-                trans.getPosition().x,
-                trans.getPosition().y + 1.0,
-                trans.getPosition().z
-        );
-
         double outwardSpeed = 16.0;
 
         for (int i = 0; i < this.daggerCount; i++) {
+
+            Vector3d spawnPos = new Vector3d(
+                    trans.getPosition().x,
+                    trans.getPosition().y + 2.0,
+                    trans.getPosition().z
+            );
+
             double angle = i * (2.0 * Math.PI / this.daggerCount);
 
             double dirX = Math.cos(angle);
