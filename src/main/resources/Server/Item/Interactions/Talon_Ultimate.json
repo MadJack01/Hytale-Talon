@@ -1,4 +1,6 @@
 {
   "Type": "TalonUltimateInteraction",
-  "Projectile Asset": "Projectile_Config_Talon_Ultimate"
+  "Projectile Asset": "Projectile_Config_Talon_Ultimate",
+  "Damage": 10,
+  "Dagger Count": 12
 }

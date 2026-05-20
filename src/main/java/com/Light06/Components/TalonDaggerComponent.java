@@ -1,6 +1,8 @@
 package com.Light06.Components;
 
+import com.Light06.TalonPlugin;
 import com.hypixel.hytale.component.Component;
+import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
@@ -19,18 +21,24 @@ public class TalonDaggerComponent implements Component<EntityStore> {
     public Ref<EntityStore> ownerRef = null;
     public Ref<EntityStore> targetRef = null;
 
-    // Tracks who this specific dagger has already damaged while returning
     public Set<Ref<EntityStore>> hitEntities = new HashSet<>();
 
     public double px, py, pz;
     public double vx, vy, vz;
 
+    public double lastTx, lastTy, lastTz;
+    public boolean hasLastTarget = false;
+
     public float damage = 15.0f;
-    public float stateTimer = 0.0f;
+    public long stateStartTime = 0L;
     public boolean isReturningToOwner = false;
 
-    public double speed = 25.0;
+    public double speed = 40.0;
     public double turnRate = 12.0;
+
+    public static ComponentType<EntityStore, TalonDaggerComponent> getComponentType() {
+        return TalonPlugin.get().getTalonDaggerComponentType();
+    }
 
     public TalonDaggerComponent() {}
 
@@ -50,11 +58,16 @@ public class TalonDaggerComponent implements Component<EntityStore> {
         TalonDaggerComponent copy = new TalonDaggerComponent(px, py, pz, vx, vy, vz, ownerRef, damage);
         copy.state = this.state;
         copy.targetRef = this.targetRef;
-        copy.stateTimer = this.stateTimer;
+        copy.stateStartTime = this.stateStartTime;
         copy.isReturningToOwner = this.isReturningToOwner;
         copy.speed = this.speed;
         copy.turnRate = this.turnRate;
         copy.hitEntities = new HashSet<>(this.hitEntities);
+        copy.lastTx = this.lastTx;
+        copy.lastTy = this.lastTy;
+        copy.lastTz = this.lastTz;
+        copy.hasLastTarget = this.hasLastTarget;
+
         return copy;
     }
 }

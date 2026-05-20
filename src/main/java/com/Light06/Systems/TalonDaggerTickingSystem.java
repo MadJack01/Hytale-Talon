@@ -1,6 +1,5 @@
 package com.Light06.Systems;
 
-import com.Light06.TalonPlugin;
 import com.Light06.Components.TalonDaggerComponent;
 import com.Light06.Components.TalonDaggerComponent.DaggerState;
 import com.Light06.Components.TalonPlayerComponent;
@@ -15,17 +14,18 @@ import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.projectile.config.StandardPhysicsProvider;
+import com.hypixel.hytale.server.core.modules.time.TimeResource;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
-
 public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
 
     @Nonnull
     @Override
     public Query<EntityStore> getQuery() {
         return Query.and(
-                TalonPlugin.getTalonDaggerComponentType(),
+
+                TalonDaggerComponent.getComponentType(),
                 TransformComponent.getComponentType()
         );
     }
@@ -33,7 +33,7 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
     @Override
     public void tick(float dt, int index, @Nonnull ArchetypeChunk<EntityStore> chunk, @Nonnull Store<EntityStore> store, @Nonnull CommandBuffer<EntityStore> cb) {
         Ref<EntityStore> daggerRef = chunk.getReferenceTo(index);
-        TalonDaggerComponent dagger = (TalonDaggerComponent) chunk.getComponent(index, TalonPlugin.getTalonDaggerComponentType());
+        TalonDaggerComponent dagger = (TalonDaggerComponent) chunk.getComponent(index, TalonDaggerComponent.getComponentType());
         TransformComponent tc = (TransformComponent) chunk.getComponent(index, TransformComponent.getComponentType());
 
         if (dagger == null || tc == null) return;
@@ -48,16 +48,19 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
             return;
         }
 
-        dagger.stateTimer += dt;
-        TalonPlayerComponent playerTrack = store.getComponent(dagger.ownerRef, TalonPlugin.getTalonPlayerComponentType());
+        TimeResource timeResource = cb.getResource(TimeResource.getResourceType());
+        long now = timeResource.getNow().toEpochMilli();
+
+        TalonPlayerComponent playerTrack = store.getComponent(dagger.ownerRef, TalonPlayerComponent.getComponentType());
 
         switch (dagger.state) {
             case OUTWARD:
-                if (dagger.stateTimer >= 0.35f) {
+                if (now >= dagger.stateStartTime + 350L) {
                     dagger.vx = 0; dagger.vy = 0; dagger.vz = 0;
                     dagger.state = DaggerState.HOVERING;
-                    dagger.stateTimer = 0.0f;
+                    dagger.stateStartTime = now;
                 }
+                executePassThroughDamage(dagger, store, cb);
                 break;
 
             case HOVERING:
@@ -70,8 +73,10 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                     dagger.targetRef = playerTrack.lockedTarget;
                     dagger.isReturningToOwner = false;
                     playerTrack.IsActive = false;
+
+                    dagger.hitEntities.clear();
                 }
-                else if (dagger.stateTimer >= 10.0f || playerTrack == null || !playerTrack.IsActive) {
+                else if (playerTrack == null || !playerTrack.IsActive) {
                     dagger.state = DaggerState.HOMING;
                     dagger.targetRef = dagger.ownerRef;
                     dagger.isReturningToOwner = true;
@@ -79,92 +84,69 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                     if (playerTrack != null) {
                         playerTrack.IsActive = false;
                     }
+
+                    dagger.hitEntities.clear();
                 }
                 break;
 
             case HOMING:
-                if (dagger.targetRef == null || !dagger.targetRef.isValid() || store.getComponent(dagger.targetRef, DeathComponent.getComponentType()) != null) {
-                    if (!dagger.isReturningToOwner) {
-                        dagger.targetRef = dagger.ownerRef;
-                        dagger.isReturningToOwner = true;
+                boolean targetAlive = (dagger.targetRef != null && dagger.targetRef.isValid() && store.getComponent(dagger.targetRef, DeathComponent.getComponentType()) == null);
+
+                if (targetAlive) {
+                    TransformComponent targetTc = (TransformComponent) store.getComponent(dagger.targetRef, TransformComponent.getComponentType());
+                    if (targetTc != null) {
+                        dagger.lastTx = targetTc.getPosition().x;
+                        dagger.lastTz = targetTc.getPosition().z;
+                        dagger.lastTy = targetTc.getPosition().y + 1.0;
+
+                        BoundingBox bb = (BoundingBox) store.getComponent(dagger.targetRef, BoundingBox.getComponentType());
+                        if (bb != null) {
+                            Box box = bb.getBoundingBox();
+                            dagger.lastTy = targetTc.getPosition().y + (box.getMin().y + box.getMax().y) * 0.5;
+                        }
+                        dagger.hasLastTarget = true;
                     } else {
-                        cb.removeEntity(daggerRef, RemoveReason.REMOVE);
-                        return;
+                        targetAlive = false;
                     }
                 }
 
-                TransformComponent targetTc = (TransformComponent) store.getComponent(dagger.targetRef, TransformComponent.getComponentType());
-                if (targetTc != null) {
-                    double tx = targetTc.getPosition().x;
-                    double tz = targetTc.getPosition().z;
-                    double ty = targetTc.getPosition().y + 1.0;
+                if (!targetAlive && !dagger.hasLastTarget) {
+                    cb.removeEntity(daggerRef, RemoveReason.REMOVE);
+                    return;
+                }
 
-                    BoundingBox bb = (BoundingBox) store.getComponent(dagger.targetRef, BoundingBox.getComponentType());
-                    if (bb != null) {
-                        Box box = bb.getBoundingBox();
-                        ty = targetTc.getPosition().y + (box.getMin().y + box.getMax().y) * 0.5;
+                double dx = dagger.lastTx - dagger.px;
+                double dy = dagger.lastTy - dagger.py;
+                double dz = dagger.lastTz - dagger.pz;
+                double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                if (dist < 1.3) {
+                    if (targetAlive && !dagger.isReturningToOwner) {
+                        DamageSystems.executeDamage(dagger.targetRef, cb, new Damage(new Damage.EntitySource(dagger.ownerRef), DamageCause.PHYSICAL, dagger.damage));
                     }
+                    cb.removeEntity(daggerRef, RemoveReason.REMOVE);
+                    return;
+                }
 
-                    double dx = tx - dagger.px;
-                    double dy = ty - dagger.py;
-                    double dz = tz - dagger.pz;
-                    double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                executePassThroughDamage(dagger, store, cb);
 
-                    if (dist < 1.3) {
-                        if (!dagger.isReturningToOwner) {
-                            DamageSystems.executeDamage(dagger.targetRef, cb, new Damage(new Damage.EntitySource(dagger.ownerRef), DamageCause.PHYSICAL, dagger.damage));
-                        }
-                        cb.removeEntity(daggerRef, RemoveReason.REMOVE);
-                        return;
-                    }
+                if (dist > 0.1) {
+                    double ndx = dx / dist; double ndy = dy / dist; double ndz = dz / dist;
+                    double speed = Math.sqrt(dagger.vx * dagger.vx + dagger.vy * dagger.vy + dagger.vz * dagger.vz);
+                    if (speed < 1.0) speed = dagger.speed;
 
-                    if (dagger.isReturningToOwner) {
-                        store.forEachChunk(Query.and(TransformComponent.getComponentType(), BoundingBox.getComponentType()), (c, unused) -> {
-                            int size = c.size();
-                            for (int i = 0; i < size; ++i) {
-                                Ref<EntityStore> hitRef = c.getReferenceTo(i);
+                    double cvx = dagger.vx / speed; double cvy = dagger.vy / speed; double cvz = dagger.vz / speed;
+                    double t = Math.min(1.0, dagger.turnRate * dt);
 
-                                if (hitRef.equals(dagger.ownerRef) || dagger.hitEntities.contains(hitRef)) continue;
-                                if (c.getComponent(i, DeathComponent.getComponentType()) != null) continue;
+                    double nvx = cvx * (1.0 - t) + ndx * t;
+                    double nvy = cvy * (1.0 - t) + ndy * t;
+                    double nvz = cvz * (1.0 - t) + ndz * t;
 
-                                TransformComponent hitTc = (TransformComponent) c.getComponent(i, TransformComponent.getComponentType());
-                                BoundingBox hitBb = (BoundingBox) c.getComponent(i, BoundingBox.getComponentType());
-
-                                double hx = hitTc.getPosition().x;
-                                double hz = hitTc.getPosition().z;
-                                double hy = hitTc.getPosition().y + (hitBb.getBoundingBox().getMin().y + hitBb.getBoundingBox().getMax().y) * 0.5;
-
-                                double hdx = hx - dagger.px;
-                                double hdy = hy - dagger.py;
-                                double hdz = hz - dagger.pz;
-                                double hDistSq = hdx * hdx + hdy * hdy + hdz * hdz;
-
-                                if (hDistSq < 2.25) {
-                                    dagger.hitEntities.add(hitRef);
-                                    DamageSystems.executeDamage(hitRef, cb, new Damage(new Damage.EntitySource(dagger.ownerRef), DamageCause.PHYSICAL, dagger.damage));
-                                }
-                            }
-                        });
-                    }
-
-                    if (dist > 0.1) {
-                        double ndx = dx / dist; double ndy = dy / dist; double ndz = dz / dist;
-                        double speed = Math.sqrt(dagger.vx * dagger.vx + dagger.vy * dagger.vy + dagger.vz * dagger.vz);
-                        if (speed < 1.0) speed = dagger.speed;
-
-                        double cvx = dagger.vx / speed; double cvy = dagger.vy / speed; double cvz = dagger.vz / speed;
-                        double t = Math.min(1.0, dagger.turnRate * dt);
-
-                        double nvx = cvx * (1.0 - t) + ndx * t;
-                        double nvy = cvy * (1.0 - t) + ndy * t;
-                        double nvz = cvz * (1.0 - t) + ndz * t;
-
-                        double nlen = Math.sqrt(nvx * nvx + nvy * nvy + nvz * nvz);
-                        if (nlen > 0.001) {
-                            dagger.vx = (nvx / nlen) * dagger.speed;
-                            dagger.vy = (nvy / nlen) * dagger.speed;
-                            dagger.vz = (nvz / nlen) * dagger.speed;
-                        }
+                    double nlen = Math.sqrt(nvx * nvx + nvy * nvy + nvz * nvz);
+                    if (nlen > 0.001) {
+                        dagger.vx = (nvx / nlen) * dagger.speed;
+                        dagger.vy = (nvy / nlen) * dagger.speed;
+                        dagger.vz = (nvz / nlen) * dagger.speed;
                     }
                 }
                 break;
@@ -183,5 +165,36 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
             tc.getRotation().setYaw(yaw);
             tc.getRotation().setPitch(pitch);
         }
+    }
+
+    private void executePassThroughDamage(TalonDaggerComponent dagger, Store<EntityStore> store, CommandBuffer<EntityStore> cb) {
+        store.forEachChunk(Query.and(TransformComponent.getComponentType(), BoundingBox.getComponentType()), (c, unused) -> {
+            int size = c.size();
+            for (int i = 0; i < size; ++i) {
+                Ref<EntityStore> hitRef = c.getReferenceTo(i);
+
+                if (hitRef.equals(dagger.ownerRef) || hitRef.equals(dagger.targetRef) || dagger.hitEntities.contains(hitRef)) continue;
+                if (c.getComponent(i, DeathComponent.getComponentType()) != null) continue;
+                TalonDaggerComponent talonDaggerComponent = store.getComponent(hitRef, TalonDaggerComponent.getComponentType());
+                if (talonDaggerComponent != null) continue;
+
+                TransformComponent hitTc = (TransformComponent) c.getComponent(i, TransformComponent.getComponentType());
+                BoundingBox hitBb = (BoundingBox) c.getComponent(i, BoundingBox.getComponentType());
+
+                double hx = hitTc.getPosition().x;
+                double hz = hitTc.getPosition().z;
+                double hy = hitTc.getPosition().y + (hitBb.getBoundingBox().getMin().y + hitBb.getBoundingBox().getMax().y) * 0.5;
+
+                double hdx = hx - dagger.px;
+                double hdy = hy - dagger.py;
+                double hdz = hz - dagger.pz;
+                double hDistSq = hdx * hdx + hdy * hdy + hdz * hdz;
+
+                if (hDistSq < 2.25) {
+                    dagger.hitEntities.add(hitRef);
+                    DamageSystems.executeDamage(hitRef, cb, new Damage(new Damage.EntitySource(dagger.ownerRef), DamageCause.PHYSICAL, dagger.damage));
+                }
+            }
+        });
     }
 }

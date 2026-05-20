@@ -1,6 +1,5 @@
 package com.Light06.Interactions;
 
-import com.Light06.TalonPlugin;
 import com.Light06.Components.TalonDaggerComponent;
 import com.Light06.Components.TalonPlayerComponent;
 import com.hypixel.hytale.codec.Codec;
@@ -17,6 +16,7 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHa
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInstantInteraction;
 import com.hypixel.hytale.server.core.modules.projectile.ProjectileModule;
 import com.hypixel.hytale.server.core.modules.projectile.config.ProjectileConfig;
+import com.hypixel.hytale.server.core.modules.time.TimeResource;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
@@ -53,31 +53,34 @@ public class TalonUltimateInteraction extends SimpleInstantInteraction {
         Ref<EntityStore> playerRef = interactionContext.getOwningEntity();
         Store<EntityStore> store = playerRef.getStore();
 
-        TransformComponent trans = store.getComponent(playerRef, TransformComponent.getComponentType());
-        if (trans == null) return;
+        TransformComponent transformComponent = store.getComponent(playerRef, TransformComponent.getComponentType());
+        if (transformComponent == null) return;
 
-        TalonPlayerComponent talonPlayerComponent = store.getComponent(playerRef, TalonPlugin.getTalonPlayerComponentType());
+        TalonPlayerComponent talonPlayerComponent = store.getComponent(playerRef, TalonPlayerComponent.getComponentType());
         if (talonPlayerComponent != null) {
             talonPlayerComponent.IsActive = false;
             return;
         }
 
-        TalonPlayerComponent newPlayerTrack = new TalonPlayerComponent();
-        newPlayerTrack.remainingHoverTime = this.hoverDuration;
-        newPlayerTrack.IsActive = true;
-        cb.addComponent(playerRef, TalonPlugin.getTalonPlayerComponentType(), newPlayerTrack);
+        TimeResource timeResource = cb.getResource(TimeResource.getResourceType());
+        long now = timeResource.getNow().toEpochMilli();
+        TalonPlayerComponent newTalonPlayerComponent = new TalonPlayerComponent();
+        newTalonPlayerComponent.castTime = now;
+        newTalonPlayerComponent.hoverEndTime = now + (long) (this.hoverDuration * 1000L);
+        newTalonPlayerComponent.IsActive = true;
+        cb.addComponent(playerRef, TalonPlayerComponent.getComponentType(), newTalonPlayerComponent);
 
         ProjectileConfig config = (ProjectileConfig) ProjectileConfig.getAssetMap().getAsset(this.projectileAsset);
         if (config == null) return;
 
-        double outwardSpeed = 16.0;
+        double outwardSpeed = 40.0;
 
         for (int i = 0; i < this.daggerCount; i++) {
 
             Vector3d spawnPos = new Vector3d(
-                    trans.getPosition().x,
-                    trans.getPosition().y + 2.0,
-                    trans.getPosition().z
+                    transformComponent.getPosition().x,
+                    transformComponent.getPosition().y + 1.5,
+                    transformComponent.getPosition().z
             );
 
             double angle = i * (2.0 * Math.PI / this.daggerCount);
@@ -93,12 +96,13 @@ public class TalonUltimateInteraction extends SimpleInstantInteraction {
             double vy = dirY * outwardSpeed;
             double vz = dirZ * outwardSpeed;
 
-            TalonDaggerComponent daggerComp = new TalonDaggerComponent(
+            TalonDaggerComponent talonDaggerComponent = new TalonDaggerComponent(
                     spawnPos.x, spawnPos.y, spawnPos.z,
                     vx, vy, vz, playerRef, this.damage
             );
+            talonDaggerComponent.stateStartTime = now;
 
-            cb.addComponent(daggerRef, TalonPlugin.getTalonDaggerComponentType(), daggerComp);
+            cb.addComponent(daggerRef, TalonDaggerComponent.getComponentType(), talonDaggerComponent);
         }
     }
 }

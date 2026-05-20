@@ -1,15 +1,15 @@
 package com.Light06.Systems;
 
-import com.Light06.TalonPlugin;
+import com.Light06.Components.TalonDaggerComponent;
 import com.Light06.Components.TalonPlayerComponent;
 import com.hypixel.hytale.component.*;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
+import com.hypixel.hytale.server.core.modules.time.TimeResource;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import javax.annotation.Nullable;
 import javax.annotation.Nonnull;
-
 
 public class TalonUltimateDamageSystem extends DamageEventSystem {
 
@@ -27,13 +27,24 @@ public class TalonUltimateDamageSystem extends DamageEventSystem {
             Ref<EntityStore> attackerRef = entitySource.getRef();
 
             if (attackerRef != null && attackerRef.isValid() && !attackerRef.equals(targetRef)) {
+                TalonDaggerComponent talonDaggerComponent = store.getComponent(targetRef, TalonDaggerComponent.getComponentType());
+                if (talonDaggerComponent != null) {
+                    return;
+                }
 
-                TalonPlayerComponent talonPlayerComponent = store.getComponent(attackerRef, TalonPlugin.getTalonPlayerComponentType());
+                TalonPlayerComponent talonPlayerComponent = store.getComponent(attackerRef, TalonPlayerComponent.getComponentType());
                 if (talonPlayerComponent != null && talonPlayerComponent.IsActive && talonPlayerComponent.lockedTarget == null) {
 
-                    talonPlayerComponent.lockedTarget = targetRef;
+                    TimeResource timeResource = commandBuffer.getResource(TimeResource.getResourceType());
+                    long now = timeResource.getNow().toEpochMilli();
+
+                    if (talonPlayerComponent.isDaggerHovering(now)) {
+                        talonPlayerComponent.lockedTarget = targetRef;
+                    }
                 }
             }
         }
     }
+
+
 }

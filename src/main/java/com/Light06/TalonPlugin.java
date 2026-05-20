@@ -3,6 +3,7 @@ package com.Light06;
 
 import com.Light06.Components.TalonDaggerComponent;
 import com.Light06.Components.TalonPlayerComponent;
+import com.Light06.Components.TalonRakeComponent;
 import com.Light06.Interactions.TalonUltimateInteraction;
 import com.Light06.Systems.TalonDaggerTickingSystem;
 import com.Light06.Systems.TalonTimerSystem;
@@ -20,6 +21,8 @@ public class TalonPlugin extends JavaPlugin {
 
     private static ComponentType<EntityStore, TalonPlayerComponent> talonPlayerComponentType;
     private static ComponentType<EntityStore, TalonDaggerComponent> talonDaggerComponentType;
+    private static ComponentType<EntityStore, TalonRakeComponent> talonRakeComponentType;
+
 
     public TalonPlugin(JavaPluginInit init) {
         super(init);
@@ -30,11 +33,15 @@ public class TalonPlugin extends JavaPlugin {
         return instance;
     }
 
-    public static ComponentType<EntityStore, TalonPlayerComponent> getTalonPlayerComponentType() {
+    public ComponentType<EntityStore, TalonRakeComponent> getTalonRakeComponentType() {
+        return talonRakeComponentType;
+    }
+
+    public ComponentType<EntityStore, TalonPlayerComponent> getTalonPlayerComponentType() {
         return talonPlayerComponentType;
     }
 
-    public static ComponentType<EntityStore, TalonDaggerComponent> getTalonDaggerComponentType() {
+    public ComponentType<EntityStore, TalonDaggerComponent> getTalonDaggerComponentType() {
         return talonDaggerComponentType;
     }
 
