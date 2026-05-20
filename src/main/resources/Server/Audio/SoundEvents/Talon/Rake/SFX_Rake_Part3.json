@@ -1,0 +1,14 @@
+{
+  "Layers": [
+    {
+      "Files": [
+        "Sounds/Weapons/Talon/Rake/Rake_Part3.ogg"
+      ],
+      "RoundRobinHistorySize": 0
+    }
+  ],
+  "Volume": 2,
+  "PreventSoundInterruption": true,
+  "AudioCategory": "AudioCat_Sword",
+  "MaxInstance": 1
+}

@@ -1,0 +1,16 @@
+{
+  "Layers": [
+    {
+      "Files": [
+        "Sounds/Weapons/Talon/Ultimate/Ultimate_Part2.ogg"
+      ],
+      "RoundRobinHistorySize": 0
+    }
+  ],
+  "Volume": 2,
+  "PreventSoundInterruption": false,
+  "AudioCategory": "AudioCat_Sword",
+  "StartAttenuationDistance": 20,
+  "MaxDistance": 30,
+  "MaxInstance": 2
+}

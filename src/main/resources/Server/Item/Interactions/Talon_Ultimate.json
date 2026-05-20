@@ -2,5 +2,6 @@
   "Type": "TalonUltimateInteraction",
   "Projectile Asset": "Projectile_Config_Talon_Ultimate",
   "Damage": 10,
-  "Dagger Count": 12
+  "Dagger Count": 12,
+  "Hover Duration": 3
 }

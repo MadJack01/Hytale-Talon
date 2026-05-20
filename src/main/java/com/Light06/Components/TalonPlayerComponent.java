@@ -15,6 +15,8 @@ public class TalonPlayerComponent implements Component<EntityStore> {
     public long hoverEndTime = 0L;
     public long outwardTime = 400L;
 
+    public boolean hoverSoundPlayed = false;
+    public boolean recallSoundPlayed = false;
 
     public static ComponentType<EntityStore, TalonPlayerComponent> getComponentType() {
         return TalonPlugin.get().getTalonPlayerComponentType();
@@ -30,6 +32,8 @@ public class TalonPlayerComponent implements Component<EntityStore> {
         copy.castTime = this.castTime;
         copy.hoverEndTime = this.hoverEndTime;
         copy.outwardTime = this.outwardTime;
+        copy.hoverSoundPlayed = this.hoverSoundPlayed;
+        copy.recallSoundPlayed = this.recallSoundPlayed;
         return copy;
     }
     public boolean isDaggerHovering(long now) {

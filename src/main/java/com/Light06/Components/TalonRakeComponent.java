@@ -20,7 +20,8 @@ public class TalonRakeComponent implements Component<EntityStore> {
     public RakeState state = RakeState.OUTWARD;
     public Ref<EntityStore> ownerRef = null;
 
-    public Set<Ref<EntityStore>> hitEntities = new HashSet<>();
+    public Set<Ref<EntityStore>> outwardHits = new HashSet<>();
+    public Set<Ref<EntityStore>> returnHits = new HashSet<>();
 
     public double px, py, pz;
     public double vx, vy, vz;
@@ -55,7 +56,10 @@ public class TalonRakeComponent implements Component<EntityStore> {
         copy.stateStartTime = this.stateStartTime;
         copy.returnSpeed = this.returnSpeed;
         copy.turnRate = this.turnRate;
-        copy.hitEntities = new HashSet<>(this.hitEntities);
+
+        // Copy both sets
+        copy.outwardHits = new HashSet<>(this.outwardHits);
+        copy.returnHits = new HashSet<>(this.returnHits);
         return copy;
     }
 }

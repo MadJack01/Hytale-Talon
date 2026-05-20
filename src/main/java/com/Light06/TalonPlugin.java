@@ -4,8 +4,10 @@ package com.Light06;
 import com.Light06.Components.TalonDaggerComponent;
 import com.Light06.Components.TalonPlayerComponent;
 import com.Light06.Components.TalonRakeComponent;
+import com.Light06.Interactions.TalonRakeInteraction;
 import com.Light06.Interactions.TalonUltimateInteraction;
 import com.Light06.Systems.TalonDaggerTickingSystem;
+import com.Light06.Systems.TalonRakeTickingSystem;
 import com.Light06.Systems.TalonTimerSystem;
 import com.Light06.Systems.TalonUltimateDamageSystem;
 import com.hypixel.hytale.component.ComponentType;
@@ -50,6 +52,7 @@ public class TalonPlugin extends JavaPlugin {
         getEntityStoreRegistry().registerSystem(new TalonDaggerTickingSystem());
         getEntityStoreRegistry().registerSystem(new TalonTimerSystem());
         getEntityStoreRegistry().registerSystem(new TalonUltimateDamageSystem());
+        getEntityStoreRegistry().registerSystem(new TalonRakeTickingSystem());
 
 
 
@@ -59,7 +62,11 @@ public class TalonPlugin extends JavaPlugin {
     protected void setup() {
         talonPlayerComponentType = getEntityStoreRegistry().registerComponent(TalonPlayerComponent.class, TalonPlayerComponent::new);
         talonDaggerComponentType = getEntityStoreRegistry().registerComponent(TalonDaggerComponent.class, TalonDaggerComponent::new);
+        talonRakeComponentType = getEntityStoreRegistry().registerComponent(TalonRakeComponent.class, TalonRakeComponent::new);
+
 
         this.getCodecRegistry(Interaction.CODEC).register("TalonUltimateInteraction", TalonUltimateInteraction.class, TalonUltimateInteraction.CODEC);
+        this.getCodecRegistry(Interaction.CODEC).register("TalonRakeInteraction", TalonRakeInteraction.class, TalonRakeInteraction.CODEC);
+
     }
 }

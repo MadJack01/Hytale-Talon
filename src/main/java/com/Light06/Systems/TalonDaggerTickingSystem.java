@@ -7,6 +7,8 @@ import com.hypixel.hytale.component.*;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.math.shape.Box;
+import com.hypixel.hytale.protocol.SoundCategory;
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.server.core.modules.entity.component.BoundingBox;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
@@ -15,16 +17,17 @@ import com.hypixel.hytale.server.core.modules.entity.damage.DamageSystems;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.projectile.config.StandardPhysicsProvider;
 import com.hypixel.hytale.server.core.modules.time.TimeResource;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
+
 public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
 
     @Nonnull
     @Override
     public Query<EntityStore> getQuery() {
         return Query.and(
-
                 TalonDaggerComponent.getComponentType(),
                 TransformComponent.getComponentType()
         );
@@ -55,10 +58,11 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
 
         switch (dagger.state) {
             case OUTWARD:
-                if (now >= dagger.stateStartTime + 350L) {
+                if (now >= dagger.stateStartTime + 200L) {
                     dagger.vx = 0; dagger.vy = 0; dagger.vz = 0;
                     dagger.state = DaggerState.HOVERING;
                     dagger.stateStartTime = now;
+
                 }
                 executePassThroughDamage(dagger, store, cb);
                 break;
@@ -73,8 +77,12 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                     dagger.targetRef = playerTrack.lockedTarget;
                     dagger.isReturningToOwner = false;
                     playerTrack.IsActive = false;
-
                     dagger.hitEntities.clear();
+
+                    int part3SoundIndex = SoundEvent.getAssetMap().getIndex("SFX_Ult_Recall_Part3");
+                    if (part3SoundIndex != 0) {
+                        SoundUtil.playSoundEvent3d(part3SoundIndex, SoundCategory.SFX, dagger.px, dagger.py, dagger.pz, store);
+                    }
                 }
                 else if (playerTrack == null || !playerTrack.IsActive) {
                     dagger.state = DaggerState.HOMING;
@@ -84,8 +92,12 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                     if (playerTrack != null) {
                         playerTrack.IsActive = false;
                     }
-
                     dagger.hitEntities.clear();
+
+                    int part3SoundIndex = SoundEvent.getAssetMap().getIndex("SFX_Ult_Recall_Part3");
+                    if (part3SoundIndex != 0) {
+                        SoundUtil.playSoundEvent3d(part3SoundIndex, SoundCategory.SFX, dagger.px, dagger.py, dagger.pz, store);
+                    }
                 }
                 break;
 
@@ -123,6 +135,11 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                 if (dist < 1.3) {
                     if (targetAlive && !dagger.isReturningToOwner) {
                         DamageSystems.executeDamage(dagger.targetRef, cb, new Damage(new Damage.EntitySource(dagger.ownerRef), DamageCause.PHYSICAL, dagger.damage));
+
+                        int finalHitSoundIndex = SoundEvent.getAssetMap().getIndex("SFX_Ult_Second_Hit");
+                        if (finalHitSoundIndex != 0) {
+                            SoundUtil.playSoundEvent3d(finalHitSoundIndex, SoundCategory.SFX, dagger.px, dagger.py, dagger.pz, store);
+                        }
                     }
                     cb.removeEntity(daggerRef, RemoveReason.REMOVE);
                     return;
@@ -175,6 +192,7 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
 
                 if (hitRef.equals(dagger.ownerRef) || hitRef.equals(dagger.targetRef) || dagger.hitEntities.contains(hitRef)) continue;
                 if (c.getComponent(i, DeathComponent.getComponentType()) != null) continue;
+
                 TalonDaggerComponent talonDaggerComponent = store.getComponent(hitRef, TalonDaggerComponent.getComponentType());
                 if (talonDaggerComponent != null) continue;
 
@@ -193,6 +211,13 @@ public class TalonDaggerTickingSystem extends EntityTickingSystem<EntityStore> {
                 if (hDistSq < 2.25) {
                     dagger.hitEntities.add(hitRef);
                     DamageSystems.executeDamage(hitRef, cb, new Damage(new Damage.EntitySource(dagger.ownerRef), DamageCause.PHYSICAL, dagger.damage));
+
+                    String soundName = (dagger.state == DaggerState.HOMING) ? "SFX_Ult_Second_Hit" : "SFX_Ult_First_Hit";
+                    int hitSoundIndex = SoundEvent.getAssetMap().getIndex(soundName);
+
+                    if (hitSoundIndex != 0) {
+                        SoundUtil.playSoundEvent3d(hitSoundIndex, SoundCategory.SFX, hx, hy, hz, store);
+                    }
                 }
             }
         });

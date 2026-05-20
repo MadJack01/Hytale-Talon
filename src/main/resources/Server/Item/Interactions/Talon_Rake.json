@@ -1,0 +1,8 @@
+{
+  "Type": "TalonRakeInteraction",
+  "Damage": 10,
+  "Projectile Asset": "Projectile_Config_Talon_Ultimate",
+  "Effects": {
+    "ItemAnimationId": "SwingLeft"
+  }
+}

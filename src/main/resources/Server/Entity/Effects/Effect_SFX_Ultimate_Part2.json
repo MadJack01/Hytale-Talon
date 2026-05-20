@@ -1,0 +1,8 @@
+{
+  "Duration": 3,
+  "RemovalBehavior": "Complete",
+  "OverlapBehavior": "Ignore",
+  "ApplicationEffects": {
+    "WorldSoundEventId": "SFX_Ultimate_Part2"
+  }
+}

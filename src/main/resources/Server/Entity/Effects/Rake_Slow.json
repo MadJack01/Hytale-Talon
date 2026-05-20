@@ -1,0 +1,10 @@
+{
+  "ApplicationEffects": {
+    "EntityTopTint": "#c3c3c3",
+    "EntityBottomTint": "#c3c3c3",
+    "HorizontalSpeedMultiplier": 0.45
+  },
+  "Duration": 1,
+  "OverlapBehavior": "Overwrite",
+  "RemovalBehavior": "Duration"
+}

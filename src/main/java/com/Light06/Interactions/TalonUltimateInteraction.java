@@ -10,6 +10,8 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.protocol.InteractionType;
+import com.hypixel.hytale.protocol.SoundCategory;
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
@@ -17,6 +19,7 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Sim
 import com.hypixel.hytale.server.core.modules.projectile.ProjectileModule;
 import com.hypixel.hytale.server.core.modules.projectile.config.ProjectileConfig;
 import com.hypixel.hytale.server.core.modules.time.TimeResource;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
@@ -72,6 +75,11 @@ public class TalonUltimateInteraction extends SimpleInstantInteraction {
 
         ProjectileConfig config = (ProjectileConfig) ProjectileConfig.getAssetMap().getAsset(this.projectileAsset);
         if (config == null) return;
+
+        int part1SoundIndex = SoundEvent.getAssetMap().getIndex("SFX_Ult_Part1");
+        if (part1SoundIndex != 0) {
+            SoundUtil.playSoundEvent3d(part1SoundIndex, SoundCategory.SFX, transformComponent.getPosition().x, transformComponent.getPosition().y, transformComponent.getPosition().z, store);
+        }
 
         double outwardSpeed = 40.0;
 

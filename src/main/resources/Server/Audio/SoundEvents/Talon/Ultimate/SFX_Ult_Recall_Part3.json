@@ -1,0 +1,15 @@
+{
+  "Layers": [
+    {
+      "Files": [
+        "Sounds/Weapons/Talon/Ultimate/Ult_Recall_Part3.ogg"
+      ],
+      "RoundRobinHistorySize": 0
+    }
+  ],
+  "PreventSoundInterruption": true,
+  "AudioCategory": "AudioCat_Sword",
+  "StartAttenuationDistance": 20,
+  "MaxDistance": 50,
+  "MaxInstance": 1
+}
